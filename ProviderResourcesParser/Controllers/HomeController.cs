@@ -19,7 +19,7 @@ namespace ProviderResourcesParser.Controllers
             return View();
         }
 
-        public string Parser()
+        public ActionResult Parser()
         {
             int pageNumber = 1;
             string pageUrl = "http://tn211.mycommunitypt.com/index.php/component/cpx/?task=search.query&code";
@@ -50,7 +50,7 @@ namespace ProviderResourcesParser.Controllers
                         document = web.Load(pageUrl);
                         page = document.DocumentNode;
                     }
-
+                    
                     //check all the element in the providers list
                     foreach (var item in page.QuerySelectorAll(".results li .content a"))
                     {
@@ -93,9 +93,9 @@ namespace ProviderResourcesParser.Controllers
                                         else
                                         {
                                             jsonFile += "\"\",";
-                                        }
-                                    }
-                                }
+                                        }                            
+                                    }                                    
+                                }                                
                             }
 
                             //Remove the last ,
@@ -108,7 +108,7 @@ namespace ProviderResourcesParser.Controllers
 
                             jsonFile += "},";
                         }
-                    }
+                    }                   
 
                     pageNumber++;
                 }
@@ -116,7 +116,7 @@ namespace ProviderResourcesParser.Controllers
                 jsonFile = jsonFile.Remove(jsonFile.Length - 1);
                 jsonFile += "]}}";
 
-                return jsonFile;
+                return View("Index",(object)jsonFile);
 
                 //return File(new System.Text.UTF8Encoding().GetBytes(jsonFile.ToString()),
                 //    "text/csv", "Provider Resources File.csv");
@@ -126,7 +126,7 @@ namespace ProviderResourcesParser.Controllers
 
                 throw;
             }
-
+            
         }
 
         public ActionResult Start()
