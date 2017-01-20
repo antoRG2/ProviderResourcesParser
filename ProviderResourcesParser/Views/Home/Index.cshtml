@@ -18,6 +18,7 @@ else
             var keys = {};
             JSON.stringify(JSON.parse(s), function (key, value) { if (_.isArray(value)) keys[key] = 1; return value; });
             s = JSON.stringify(JSON.parse(s), function (key, value) { if (!_.isArray(value) && key in keys) return [value]; return value; })
+
             var inArray = [];
             inArray = arrayFrom(JSON.parse(s));
             var outArray = [];
@@ -34,18 +35,14 @@ else
 
             var csv = $.csv.fromObjects(outArray, options);
 
-            debugger;
-            var a = document.createElement('a');
-            a.href = 'data:attachment/csv,' + csv;
-            a.target = '_blank';
-            a.download = 'Provider Resources.csv';
+      
+            var downloaded = document.createElement('a');
+            downloaded.href = 'data:attachment/csv,' + csv;
+            downloaded.target = '_blank';
+            downloaded.download = 'Provider Resources.csv';
 
-            document.body.appendChild(a);
-            a.click();
-
-
-            //FileSaver(csv, 'csv');
-
+            document.body.appendChild(downloaded);
+            downloaded.click();
         });
 
     </script>
