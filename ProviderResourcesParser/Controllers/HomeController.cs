@@ -6,6 +6,8 @@ using System.Web.Mvc;
 using HtmlAgilityPack;
 using Fizzler.Systems.HtmlAgilityPack;
 using System.Threading.Tasks;
+using System.Web.UI;
+using Newtonsoft.Json;
 using ProviderResourcesParser.Models;
 
 namespace ProviderResourcesParser.Controllers
@@ -15,6 +17,116 @@ namespace ProviderResourcesParser.Controllers
         public ActionResult Index()
         {
             return View();
+        }
+
+        public string Parser()
+        {
+            int pageNumber = 1;
+            string pageUrl = "http://tn211.mycommunitypt.com/index.php/component/cpx/?task=search.query&code";
+
+            List<BaseStructure> ListFile = new List<BaseStructure>();
+            //BaseStructure row = new BaseStructure();
+
+            string jsonFile = "{\"menu\": {\"menuitem\": [";
+
+            try
+            {
+                var web = new HtmlWeb();
+                var document = web.Load(pageUrl);
+                var page = document.DocumentNode;
+
+                //get last page of the list 
+                var paginationList = page.QuerySelectorAll(".pagination a").ToList();
+                int lastPage = Int32.Parse(paginationList[paginationList.Count - 2].InnerText);
+
+                while (pageNumber <= 1)
+                {
+                    if (pageNumber != 1)
+                    {
+                        pageUrl =
+                            "http://tn211.mycommunitypt.com/index.php/component/cpx/?task=search.query&view=&page=" +
+                            pageNumber.ToString() +
+                            "&search_history_id=66775857&unit_list=0&akaSort=0&query=%20&simple_query=";
+                        document = web.Load(pageUrl);
+                        page = document.DocumentNode;
+                    }
+
+                    //check all the element in the providers list
+                    foreach (var item in page.QuerySelectorAll(".results li .content a"))
+                    {
+                        var href = item.Attributes.Where(x => x.Name == "href").FirstOrDefault().Value;
+
+                        if (!String.IsNullOrWhiteSpace(href))
+                        {
+                            //loading page data
+                            var itemWeb = new HtmlWeb();
+                            string url = "http://tn211.mycommunitypt.com" + href;
+                            var itemDocument = itemWeb.Load(url);
+                            var itemPage = itemDocument.DocumentNode;
+
+                            jsonFile += "{";
+
+                            foreach (var pSelector in itemPage.QuerySelectorAll("#current_tab p"))
+                            {
+                                if (pSelector.HasAttributes && pSelector.Attributes["class"] != null)
+                                {
+                                    if (pSelector.Attributes["class"].Value.Contains("view_label_type_"))
+                                    {
+                                        jsonFile += "\"" + pSelector.InnerHtml + "\": ";
+                                        // { "ColumName" :
+                                    }
+                                    else
+                                    {
+                                        if (pSelector.Attributes["class"].Value.Contains("view_type_") &&
+                                            !pSelector.InnerHtml.Contains("General Information"))
+                                        {
+                                            // "value",
+                                            jsonFile += "\"" +
+                                                        pSelector.InnerHtml.Replace("<br>", "")
+                                                            .Replace(System.Environment.NewLine, "")
+                                                            .Replace(";", "")
+                                                            .Replace("\n", String.Empty)
+                                                            .Replace("\r", String.Empty)
+                                                            .Replace("\t", String.Empty)
+                                                            .Replace("\"", "") + "\",";
+                                        }
+                                        else
+                                        {
+                                            jsonFile += "\"\",";
+                                        }
+                                    }
+                                }
+                            }
+
+                            //Remove the last ,
+                            jsonFile = jsonFile.Remove(jsonFile.Length - 1);
+
+                            if (jsonFile.EndsWith(":"))
+                            {
+                                jsonFile += "\"\"";
+                            }
+
+                            jsonFile += "},";
+                        }
+                    }
+
+                    pageNumber++;
+                }
+
+                jsonFile = jsonFile.Remove(jsonFile.Length - 1);
+                jsonFile += "]}}";
+
+                return jsonFile;
+
+                //return File(new System.Text.UTF8Encoding().GetBytes(jsonFile.ToString()),
+                //    "text/csv", "Provider Resources File.csv");
+            }
+            catch (Exception)
+            {
+
+                throw;
+            }
+
         }
 
         public ActionResult Start()
@@ -480,7 +592,7 @@ namespace ProviderResourcesParser.Controllers
                     {
                         lineBody += empty;
                     }
-                    
+
                     sb.AppendLine(lineBody);
                     lineBody = "";
                 }

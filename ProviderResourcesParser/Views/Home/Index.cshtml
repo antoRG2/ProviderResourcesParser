@@ -1,15 +1,42 @@
-﻿@model FileContentResult
+﻿@model string
 @{
     ViewBag.Title = "Provider Resources Parser";
 }
 @if (Model == null)
 {
-<div class="start">
-    @Html.ActionLink("Start Parsing", "Start", "Home", new {id = "start-parse"})
-    <div id="wait-message" class="hide">Please wait, the file will be downloaded when the process is completed</div>
-</div>
+    <div class="start">
+        @Html.ActionLink("Start Parsing", "Parser", "Home", new { id = "start-parse" })
+        <div id="wait-message" class="hide">Please wait, the file will be downloaded when the process is completed</div>
+    </div>
 }
 else
 {
+    <script>
+        $(document).ready(function() {
+            var s = '@Html.Raw(Model)';
+            var keys = {};
+            JSON.stringify(JSON.parse(s), function (key, value) { if (_.isArray(value)) keys[key] = 1; return value; });
+            s = JSON.stringify(JSON.parse(s), function (key, value) { if (!_.isArray(value) && key in keys) return [value]; return value; })
+            var inArray = [];
+            inArray = arrayFrom(JSON.parse(s));
+            var outArray = [];
+
+            for (var row in inArray) {
+                outArray[outArray.length] = parse_object(inArray[row]);
+            }
+
+            var options = {};
+            var dataString;
+            options.separator = ",";
+            options.headers = true
+            options.noBreaks = false;
+
+            var csv = $.csv.fromObjects(outArray, options);
+
+            //FileSaver(csv, 'csv');
+
+        });
+
+    </script>
     <h1>Parsing Complete</h1>
 }
