@@ -27,7 +27,6 @@ namespace ProviderResourcesParser.Controllers
             List<string> mainJsonFile = new List<string>();
 
             mainJsonFile.Add("{\"menu\": {\"menuitem\": [");
-            string mainJsonFile2 = "";
 
             try
             {
@@ -39,7 +38,7 @@ namespace ProviderResourcesParser.Controllers
                 var paginationList = page.QuerySelectorAll(".pagination a").ToList();
                 int lastPage = Int32.Parse(paginationList[paginationList.Count - 2].InnerText);
 
-                while (pageNumber <= 1)
+                while (pageNumber <= lastPage)
                 {
                     if (pageNumber != 1)
                     {
@@ -252,7 +251,7 @@ namespace ProviderResourcesParser.Controllers
 
                 string json = string.Join("", mainJsonFile.ToArray());
 
-                return View("Index", (object)json);
+               return View("Index", (object)json);
             }
             catch (Exception)
             {
