@@ -1,0 +1,15 @@
+﻿@model FileContentResult
+@{
+    ViewBag.Title = "Provider Resources Parser";
+}
+@if (Model == null)
+{
+<div class="start">
+    @Html.ActionLink("Start Parsing", "Start", "Home", new {id = "start-parse"})
+    <div id="wait-message" class="hide">Please wait, the file will be downloaded when the process is completed</div>
+</div>
+}
+else
+{
+    <h1>Parsing Complete</h1>
+}

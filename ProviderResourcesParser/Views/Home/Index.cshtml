@@ -4,16 +4,15 @@
 }
 @if (Model == null)
 {
-<div class="start">
-    @Html.ActionLink("Start Parsing", "Parser", "Home", new {id = "start-parse"})
-    <div id="wait-message" class="hide">Please wait, the file will be downloaded when the process is completed</div>
-</div>
+    <div class="start">
+        @Html.ActionLink("Start Parsing", "Parser", "Home", new { id = "start-parse" })
+        <div id="wait-message" class="hide">Please wait, the file will be downloaded when the process is completed</div>
+    </div>
 }
 else
 {
     <script>
         $(document).ready(function () {
-            debugger;
             var s = '@Html.Raw(Model)';
             var keys = {};
             JSON.stringify(JSON.parse(s), function (key, value) { if (_.isArray(value)) keys[key] = 1; return value; });
@@ -35,11 +34,21 @@ else
 
             var csv = $.csv.fromObjects(outArray, options);
 
-      
+
             var downloaded = document.createElement('a');
-            downloaded.href = 'data:attachment/csv,' + csv;
+            downloaded.href = 'data:text/csv;charset=utf-8,' + encodeURI(csv);
             downloaded.target = '_blank';
             downloaded.download = 'Provider Resources.csv';
+
+            var currentdate = new Date();
+            var datetime = "Last Sync: " + currentdate.getDate() + "/"
+                            + (currentdate.getMonth() + 1) + "/"
+                            + currentdate.getFullYear() + " | "
+                            + currentdate.getHours() + ":"
+                            + currentdate.getMinutes() + ":"
+                            + currentdate.getSeconds();
+
+            console.log(datetime);
 
             document.body.appendChild(downloaded);
             downloaded.click();
