@@ -39,7 +39,7 @@ namespace ProviderResourcesParser.Controllers
                 var paginationList = page.QuerySelectorAll(".pagination a").ToList();
                 int lastPage = Int32.Parse(paginationList[paginationList.Count - 2].InnerText);
 
-                while (pageNumber <= lastPage)
+                while (pageNumber <= 2)
                 {
                     if (pageNumber != 1)
                     {
@@ -53,7 +53,7 @@ namespace ProviderResourcesParser.Controllers
 
                     //check all the element in the providers list
                     Parallel.ForEach(page.QuerySelectorAll(".results li .content a"), item =>
-                        //foreach (var item in page.QuerySelectorAll(".results li .content a"))
+                    //foreach (var item in page.QuerySelectorAll(".results li .content a"))
                     {
 
                         string jsonFile = "{";
@@ -152,25 +152,22 @@ namespace ProviderResourcesParser.Controllers
                                                 {
                                                     if (pSelector.InnerHtml.Contains("Related Resource"))
                                                     {
-                                                        if (jsonFile.Trim().EndsWith(":"))
+                                                        foreach (
+                                                            var resource in
+                                                                itemPage.QuerySelectorAll(
+                                                                    ".view_type_resource_list a"))
                                                         {
-                                                            foreach (
-                                                                var resource in
-                                                                    itemPage.QuerySelectorAll(
-                                                                        ".view_type_resource_list a"))
+                                                            if (resource.InnerHtml != "")
                                                             {
-                                                                if (resource.InnerHtml != "")
-                                                                {
-                                                                    jsonFile +=
-                                                                        resource.InnerHtml.Replace("\"", "")
-                                                                            .Replace("'", "") +
-                                                                        " | ";
-                                                                }
+                                                                jsonFile +=
+                                                                    resource.InnerHtml.Replace("\"", "")
+                                                                        .Replace("'", "") +
+                                                                    " | ";
                                                             }
-                                                            if (jsonFile.EndsWith("|"))
-                                                            {
-                                                                jsonFile = jsonFile.Remove(jsonFile.Length - 1);
-                                                            }
+                                                        }
+                                                        if (jsonFile.EndsWith("|"))
+                                                        {
+                                                            jsonFile = jsonFile.Remove(jsonFile.Length - 1);
                                                         }
                                                     }
 
@@ -180,32 +177,28 @@ namespace ProviderResourcesParser.Controllers
                                                                     pSelector.InnerHtml.Split(' ')[1];
                                                         id = id.Remove(id.Length - 1);
 
-                                                        if (jsonFile.Trim().EndsWith(":"))
+                                                        foreach (
+                                                            var resource in
+                                                                itemPage.QuerySelectorAll("#view_field_" + id + " a")
+                                                            )
                                                         {
-                                                            foreach (
-                                                                var resource in
-                                                                    itemPage.QuerySelectorAll("#view_field_" + id + " a")
-                                                                )
+                                                            if (resource.InnerHtml != "")
                                                             {
-                                                                if (resource.InnerHtml != "")
-                                                                {
-                                                                    jsonFile +=
-                                                                        resource.InnerHtml.Replace("\"", "")
-                                                                            .Replace("'", "") +
-                                                                        " | ";
-                                                                }
-                                                            }
-                                                            if (jsonFile.EndsWith("|"))
-                                                            {
-                                                                jsonFile = jsonFile.Remove(jsonFile.Length - 1);
+                                                                jsonFile +=
+                                                                    resource.InnerHtml.Replace("\"", "")
+                                                                        .Replace("'", "") +
+                                                                    " | ";
                                                             }
                                                         }
-
+                                                        if (jsonFile.EndsWith("|"))
+                                                        {
+                                                            jsonFile = jsonFile.Remove(jsonFile.Length - 1);
+                                                        }
                                                     }
                                                 }
 
                                                 jsonFile += "\",";
-                                            }                                            
+                                            }
                                         }
                                     }
                                 }
@@ -220,7 +213,7 @@ namespace ProviderResourcesParser.Controllers
                 }
 
                 //mainJsonFile = mainJsonFile.Remove(mainJsonFile.Length - 1);
-                mainJsonFile[mainJsonFile.Count-1] =  mainJsonFile[mainJsonFile.Count-1].Remove(mainJsonFile[mainJsonFile.Count-1].Length - 1);
+                mainJsonFile[mainJsonFile.Count - 1] = mainJsonFile[mainJsonFile.Count - 1].Remove(mainJsonFile[mainJsonFile.Count - 1].Length - 1);
                 mainJsonFile.Add("]}}");
 
                 string json = string.Join("", mainJsonFile.ToArray());
