@@ -39,7 +39,7 @@ namespace ProviderResourcesParser.Controllers
                 var paginationList = page.QuerySelectorAll(".pagination a").ToList();
                 int lastPage = Int32.Parse(paginationList[paginationList.Count - 2].InnerText);
 
-                while (pageNumber <= 2)
+                while (pageNumber <= 1)
                 {
                     if (pageNumber != 1)
                     {
@@ -58,7 +58,7 @@ namespace ProviderResourcesParser.Controllers
 
                         string jsonFile = "{";
 
-                        for (int i = 1; i <= 3; i++)
+                        for (int tabCuonter = 1; tabCuonter <= 3; tabCuonter++)
                         {
                             var href = item.Attributes.Where(x => x.Name == "href").FirstOrDefault().Value;
 
@@ -70,10 +70,10 @@ namespace ProviderResourcesParser.Controllers
                                 var itemDocument = itemWeb.Load(url);
                                 var itemPage = itemDocument.DocumentNode;
 
-                                if (i >= 2)
+                                if (tabCuonter >= 2)
                                 {
                                     url = url.Replace(".view", "");
-                                    if (i == 2)
+                                    if (tabCuonter == 2)
                                     {
                                         url = url.Replace(url.Substring(url.IndexOf("search")), "tab=2");
                                     }
@@ -117,91 +117,125 @@ namespace ProviderResourcesParser.Controllers
                                         : "") + "\",";
                                 }
 
-                                foreach (var pSelector in itemPage.QuerySelectorAll("#current_tab p"))
+                                if (tabCuonter == 3)
                                 {
-                                    if (pSelector.HasAttributes && pSelector.Attributes["class"] != null)
+                                    var cont = 1;
+                                    foreach (var tr in itemPage.QuerySelectorAll("#current_tab tr td"))
                                     {
-                                        if (pSelector.Attributes["class"].Value.Contains("view_label_type_"))
+                                        if (cont % 2 != 0)
                                         {
+                                            jsonFile += "\"" + (jsonFile.Contains(tr.InnerText) ? tr.InnerText.Replace(System.Environment.NewLine, "") + cont.ToString() : tr.InnerText.Replace(System.Environment.NewLine, ""))
+                                            .Replace("'", "")
+                                            .Replace(";", "")
+                                            .Replace("\n", String.Empty)
+                                            .Replace("\r", String.Empty)
+                                            .Replace("\t", String.Empty)
+                                            .Replace("\"", "") + "\":";
+                                        }
+                                        else
+                                        {
+                                            jsonFile += "\"" + tr.InnerText.Replace(System.Environment.NewLine, "")
+                                                .Replace("'", "")
+                                                .Replace(";", "")
+                                                .Replace("\n", String.Empty)
+                                                .Replace("\r", String.Empty)
+                                                .Replace("\t", String.Empty)
+                                                .Replace("\"", "") + "\",";
+                                        }
 
-                                            var itemID = pSelector.Id.Replace("view_label_", "view_");
-
-                                            if (!jsonFile.Contains(pSelector.InnerHtml))
+                                        cont++;
+                                    }
+                                }
+                                else
+                                {
+                                    foreach (var pSelector in itemPage.QuerySelectorAll("#current_tab p"))
+                                    {
+                                        if (pSelector.HasAttributes && pSelector.Attributes["class"] != null)
+                                        {
+                                            if (pSelector.Attributes["class"].Value.Contains("view_label_type_"))
                                             {
-                                                var value = itemPage.QuerySelector("#current_tab p#" + itemID);
 
-                                                jsonFile += "\"" +
-                                                            (pSelector.InnerHtml.Contains("Related Resource")
-                                                                ? "Related Resources"
-                                                                : pSelector.InnerHtml) + "\": " + "\"";
+                                                var itemID = pSelector.Id.Replace("view_label_", "view_");
 
-
-                                                if (!pSelector.InnerHtml.Contains("Related Resource") &&
-                                                    !pSelector.InnerHtml.Contains("Services"))
+                                                if (!jsonFile.Contains(pSelector.InnerHtml))
                                                 {
-                                                    jsonFile += value.InnerHtml.Replace("<br>", "")
-                                                        .Replace(System.Environment.NewLine, "")
-                                                        .Replace("'", "")
-                                                        .Replace(";", "")
-                                                        .Replace("\n", String.Empty)
-                                                        .Replace("\r", String.Empty)
-                                                        .Replace("\t", String.Empty)
-                                                        .Replace("\"", "");
-                                                }
-                                                else
-                                                {
-                                                    if (pSelector.InnerHtml.Contains("Related Resource"))
+                                                    var value = itemPage.QuerySelector("#current_tab p#" + itemID);
+
+                                                    jsonFile += "\"" +
+                                                                (pSelector.InnerHtml.Contains("Related Resource")
+                                                                    ? "Related Resources"
+                                                                    : pSelector.InnerHtml) + "\": " + "\"";
+
+
+                                                    if (!pSelector.InnerHtml.Contains("Related Resource") &&
+                                                        !pSelector.InnerHtml.Contains("Services"))
                                                     {
-                                                        foreach (
-                                                            var resource in
-                                                                itemPage.QuerySelectorAll(
-                                                                    ".view_type_resource_list a"))
+                                                        jsonFile += value.InnerHtml.Replace("<br>", "")
+                                                            .Replace(System.Environment.NewLine, "")
+                                                            .Replace("'", "")
+                                                            .Replace(";", "")
+                                                            .Replace("\n", String.Empty)
+                                                            .Replace("\r", String.Empty)
+                                                            .Replace("\t", String.Empty)
+                                                            .Replace("\"", "");
+                                                    }
+                                                    else
+                                                    {
+                                                        if (pSelector.InnerHtml.Contains("Related Resource"))
                                                         {
-                                                            if (resource.InnerHtml != "")
+                                                            foreach (
+                                                                var resource in
+                                                                    itemPage.QuerySelectorAll(
+                                                                        ".view_type_resource_list a"))
                                                             {
-                                                                jsonFile +=
-                                                                    resource.InnerHtml.Replace("\"", "")
-                                                                        .Replace("'", "") +
-                                                                    " | ";
+                                                                if (resource.InnerHtml != "")
+                                                                {
+                                                                    jsonFile +=
+                                                                        resource.InnerHtml.Replace("\"", "")
+                                                                            .Replace("'", "") +
+                                                                        " | ";
+                                                                }
+                                                            }
+                                                            if (jsonFile.EndsWith("|"))
+                                                            {
+                                                                jsonFile = jsonFile.Remove(jsonFile.Length - 1);
                                                             }
                                                         }
-                                                        if (jsonFile.EndsWith("|"))
+
+                                                        if (pSelector.InnerHtml.Contains("Services"))
                                                         {
-                                                            jsonFile = jsonFile.Remove(jsonFile.Length - 1);
+                                                            string id = pSelector.InnerHtml.Split(' ')[0].ToLower() +
+                                                                        pSelector.InnerHtml.Split(' ')[1];
+                                                            id = id.Remove(id.Length - 1);
+
+                                                            foreach (
+                                                                var resource in
+                                                                    itemPage.QuerySelectorAll("#view_field_" + id + " a")
+                                                                )
+                                                            {
+                                                                if (resource.InnerHtml != "")
+                                                                {
+                                                                    jsonFile +=
+                                                                        resource.InnerHtml.Replace("\"", "")
+                                                                            .Replace("'", "") +
+                                                                        " | ";
+                                                                }
+                                                            }
+                                                            if (jsonFile.EndsWith("|"))
+                                                            {
+                                                                jsonFile = jsonFile.Remove(jsonFile.Length - 1);
+                                                            }
                                                         }
                                                     }
 
-                                                    if (pSelector.InnerHtml.Contains("Services"))
-                                                    {
-                                                        string id = pSelector.InnerHtml.Split(' ')[0].ToLower() +
-                                                                    pSelector.InnerHtml.Split(' ')[1];
-                                                        id = id.Remove(id.Length - 1);
-
-                                                        foreach (
-                                                            var resource in
-                                                                itemPage.QuerySelectorAll("#view_field_" + id + " a")
-                                                            )
-                                                        {
-                                                            if (resource.InnerHtml != "")
-                                                            {
-                                                                jsonFile +=
-                                                                    resource.InnerHtml.Replace("\"", "")
-                                                                        .Replace("'", "") +
-                                                                    " | ";
-                                                            }
-                                                        }
-                                                        if (jsonFile.EndsWith("|"))
-                                                        {
-                                                            jsonFile = jsonFile.Remove(jsonFile.Length - 1);
-                                                        }
-                                                    }
+                                                    jsonFile += "\",";
                                                 }
-
-                                                jsonFile += "\",";
                                             }
                                         }
                                     }
                                 }
+
+
                             }
                         }
                         jsonFile = jsonFile.Remove(jsonFile.Length - 1);
