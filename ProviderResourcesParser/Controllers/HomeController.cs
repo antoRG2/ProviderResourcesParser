@@ -24,14 +24,10 @@ namespace ProviderResourcesParser.Controllers
             int pageNumber = 1;
             string pageUrl = "http://tn211.mycommunitypt.com/index.php/component/cpx/?task=search.query&code";
 
-            List<BaseStructure> ListFile = new List<BaseStructure>();
-            //BaseStructure row = new BaseStructure();
-
             List<string> mainJsonFile = new List<string>();
 
             mainJsonFile.Add("{\"menu\": {\"menuitem\": [");
             string mainJsonFile2 = "";
-            string jsonFile = "";
 
             try
             {
@@ -43,7 +39,7 @@ namespace ProviderResourcesParser.Controllers
                 var paginationList = page.QuerySelectorAll(".pagination a").ToList();
                 int lastPage = Int32.Parse(paginationList[paginationList.Count - 2].InnerText);
 
-                while (pageNumber <= 1)
+                while (pageNumber <= lastPage)
                 {
                     if (pageNumber != 1)
                     {
@@ -59,8 +55,8 @@ namespace ProviderResourcesParser.Controllers
                     Parallel.ForEach(page.QuerySelectorAll(".results li .content a"), item =>
                         //foreach (var item in page.QuerySelectorAll(".results li .content a"))
                     {
-                        bool primaryService = false;
-                        jsonFile = "{";
+
+                        string jsonFile = "{";
 
                         for (int i = 1; i <= 3; i++)
                         {
@@ -137,20 +133,20 @@ namespace ProviderResourcesParser.Controllers
                                                 jsonFile += "\"" +
                                                             (pSelector.InnerHtml.Contains("Related Resource")
                                                                 ? "Related Resources"
-                                                                : pSelector.InnerHtml) + "\": ";
+                                                                : pSelector.InnerHtml) + "\": " + "\"";
 
 
                                                 if (!pSelector.InnerHtml.Contains("Related Resource") &&
                                                     !pSelector.InnerHtml.Contains("Services"))
                                                 {
-                                                    jsonFile += "\"" + value.InnerHtml.Replace("<br>", "")
-                                                                .Replace(System.Environment.NewLine, "")
-                                                                .Replace("'", "")
-                                                                .Replace(";", "")
-                                                                .Replace("\n", String.Empty)
-                                                                .Replace("\r", String.Empty)
-                                                                .Replace("\t", String.Empty)
-                                                                .Replace("\"", "");
+                                                    jsonFile += value.InnerHtml.Replace("<br>", "")
+                                                        .Replace(System.Environment.NewLine, "")
+                                                        .Replace("'", "")
+                                                        .Replace(";", "")
+                                                        .Replace("\n", String.Empty)
+                                                        .Replace("\r", String.Empty)
+                                                        .Replace("\t", String.Empty)
+                                                        .Replace("\"", "");
                                                 }
                                                 else
                                                 {
@@ -158,15 +154,16 @@ namespace ProviderResourcesParser.Controllers
                                                     {
                                                         if (jsonFile.Trim().EndsWith(":"))
                                                         {
-                                                            jsonFile += "\"";
                                                             foreach (
                                                                 var resource in
-                                                                    itemPage.QuerySelectorAll(".view_type_resource_list a"))
+                                                                    itemPage.QuerySelectorAll(
+                                                                        ".view_type_resource_list a"))
                                                             {
                                                                 if (resource.InnerHtml != "")
                                                                 {
                                                                     jsonFile +=
-                                                                        resource.InnerHtml.Replace("\"", "").Replace("'", "") +
+                                                                        resource.InnerHtml.Replace("\"", "")
+                                                                            .Replace("'", "") +
                                                                         " | ";
                                                                 }
                                                             }
@@ -174,7 +171,6 @@ namespace ProviderResourcesParser.Controllers
                                                             {
                                                                 jsonFile = jsonFile.Remove(jsonFile.Length - 1);
                                                             }
-                                                            jsonFile += "\"";
                                                         }
                                                     }
 
@@ -186,15 +182,16 @@ namespace ProviderResourcesParser.Controllers
 
                                                         if (jsonFile.Trim().EndsWith(":"))
                                                         {
-
-                                                            jsonFile += "\"";
-
-                                                            foreach (var resource in itemPage.QuerySelectorAll("#view_field_" + id + " a"))
+                                                            foreach (
+                                                                var resource in
+                                                                    itemPage.QuerySelectorAll("#view_field_" + id + " a")
+                                                                )
                                                             {
                                                                 if (resource.InnerHtml != "")
                                                                 {
                                                                     jsonFile +=
-                                                                        resource.InnerHtml.Replace("\"", "").Replace("'", "") +
+                                                                        resource.InnerHtml.Replace("\"", "")
+                                                                            .Replace("'", "") +
                                                                         " | ";
                                                                 }
                                                             }
@@ -202,79 +199,19 @@ namespace ProviderResourcesParser.Controllers
                                                             {
                                                                 jsonFile = jsonFile.Remove(jsonFile.Length - 1);
                                                             }
-
-                                                            jsonFile += "\"";
                                                         }
 
                                                     }
                                                 }
 
-                                                jsonFile += ",";
-
-                                            }
-
-
-                                            // { "ColumName" :
-                                           
+                                                jsonFile += "\",";
+                                            }                                            
                                         }
-                                        //else
-                                        //{
-                                        //    if (pSelector.Attributes["class"].Value.Contains("view_type_") &&
-                                        //        !pSelector.InnerHtml.Contains("General Information") &&
-                                        //        !pSelector.InnerHtml.Contains("Miscellaneous") &&
-                                        //        !pSelector.InnerHtml.Contains("Legal Status") &&
-                                        //        !pSelector.InnerHtml.Contains("Address Listings") &&
-                                        //        !pSelector.InnerHtml.Contains("Contacts") &&
-                                        //        !pSelector.InnerHtml.Contains("Phone Numbers")
-                                        //        )
-                                        //    {
-                                        //        // "value",
-                                        //        jsonFile += "\"" +
-                                        //                    pSelector.InnerHtml.Replace("<br>", "")
-                                        //                        .Replace(System.Environment.NewLine, "")
-                                        //                        .Replace("'", "")
-                                        //                        .Replace(";", "")
-                                        //                        .Replace("\n", String.Empty)
-                                        //                        .Replace("\r", String.Empty)
-                                        //                        .Replace("\t", String.Empty)
-                                        //                        .Replace("\"", "") + "\",";
-                                        //    }
-                                        //    else
-                                        //    {
-
-                                        //        if (jsonFile.EndsWith(":"))
-                                        //        {
-                                        //            jsonFile += "\"\"";
-                                        //        }
-                                        //        if (!jsonFile.EndsWith(",") && !jsonFile.EndsWith("\""))
-                                        //        {
-                                        //            jsonFile += "\"\",";
-                                        //        }
-                                        //        else
-                                        //        {
-                                        //            if (jsonFile.EndsWith("\""))
-                                        //            {
-                                        //                jsonFile += ",";
-                                        //            }
-                                        //        }
-                                        //    }
-                                        //}
                                     }
                                 }
-
-                                //Remove the last ,
-                                //if (!jsonFile.EndsWith("\""))
-                                //{
-                                //    jsonFile = jsonFile.Remove(jsonFile.Length - 1);
-                                //}
-
-                                //if (jsonFile.EndsWith(":"))
-                                //{
-                                //    jsonFile += "\"\"";
-                                //}
                             }
                         }
-
+                        jsonFile = jsonFile.Remove(jsonFile.Length - 1);
                         jsonFile += "},";
                         mainJsonFile.Add(jsonFile);
                     });
@@ -283,15 +220,12 @@ namespace ProviderResourcesParser.Controllers
                 }
 
                 //mainJsonFile = mainJsonFile.Remove(mainJsonFile.Length - 1);
-                mainJsonFile[mainJsonFile.Count - 1].Remove(mainJsonFile[mainJsonFile.Count - 1].Length - 1);
+                mainJsonFile[mainJsonFile.Count-1] =  mainJsonFile[mainJsonFile.Count-1].Remove(mainJsonFile[mainJsonFile.Count-1].Length - 1);
                 mainJsonFile.Add("]}}");
 
-                string dogCsv = string.Join(",", mainJsonFile.ToArray());
+                string json = string.Join("", mainJsonFile.ToArray());
 
-                return View("Index", (object)dogCsv);
-
-                //return File(new System.Text.UTF8Encoding().GetBytes(jsonFile.ToString()),
-                //    "text/csv", "Provider Resources File.csv");
+                return View("Index", (object)json);
             }
             catch (Exception)
             {
