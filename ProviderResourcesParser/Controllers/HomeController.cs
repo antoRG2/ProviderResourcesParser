@@ -1,14 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Web.Mvc;
-using HtmlAgilityPack;
-using Fizzler.Systems.HtmlAgilityPack;
 using System.Threading.Tasks;
-using System.Web.UI;
-using Newtonsoft.Json;
-using ProviderResourcesParser.Models;
+using System.Web.Mvc;
+using Fizzler.Systems.HtmlAgilityPack;
+using HtmlAgilityPack;
 
 namespace ProviderResourcesParser.Controllers
 {
@@ -23,9 +19,7 @@ namespace ProviderResourcesParser.Controllers
         {
             int pageNumber = 1;
             string pageUrl = "http://tn211.mycommunitypt.com/index.php/component/cpx/?task=search.query&code";
-
             List<string> mainJsonFile = new List<string>();
-
             mainJsonFile.Add("{\"menu\": {\"menuitem\": [");
 
             try
@@ -52,12 +46,10 @@ namespace ProviderResourcesParser.Controllers
 
                     //check all the element in the providers list
                     Parallel.ForEach(page.QuerySelectorAll(".results li .content a"), item =>
-                    //foreach (var item in page.QuerySelectorAll(".results li .content a"))
                     {
-
                         string jsonFile = "{";
 
-                        for (int tabCuonter = 1; tabCuonter <= 3; tabCuonter++)
+                        for (int tabCounter = 1; tabCounter <= 3; tabCounter++)
                         {
                             var href = item.Attributes.Where(x => x.Name == "href").FirstOrDefault().Value;
 
@@ -69,10 +61,10 @@ namespace ProviderResourcesParser.Controllers
                                 var itemDocument = itemWeb.Load(url);
                                 var itemPage = itemDocument.DocumentNode;
 
-                                if (tabCuonter >= 2)
+                                if (tabCounter >= 2)
                                 {
                                     url = url.Replace(".view", "");
-                                    if (tabCuonter == 2)
+                                    if (tabCounter == 2)
                                     {
                                         url = url.Replace(url.Substring(url.IndexOf("search")), "tab=2");
                                     }
@@ -93,7 +85,6 @@ namespace ProviderResourcesParser.Controllers
                                                     ? itemPage.QuerySelector("#view_field_name_top")
                                                         .InnerText.Replace("'", "")
                                                     : "") + "\",";
-
 
                                     jsonFile += "\"Address\":" + "\"" +
                                                 (itemPage.QuerySelector("#view_field_primaryAddressId") != null
@@ -116,7 +107,7 @@ namespace ProviderResourcesParser.Controllers
                                         : "") + "\",";
                                 }
 
-                                if (tabCuonter == 3)
+                                if (tabCounter == 3)
                                 {
                                     var cont = 1;
                                     foreach (var tr in itemPage.QuerySelectorAll("#current_tab tr td"))
@@ -125,9 +116,9 @@ namespace ProviderResourcesParser.Controllers
                                         {
                                             jsonFile += "\"" +
                                                         (jsonFile.Contains(tr.InnerText)
-                                                            ? tr.InnerText.Replace(System.Environment.NewLine, "") +
+                                                            ? tr.InnerText.Replace(Environment.NewLine, "") +
                                                               cont.ToString()
-                                                            : tr.InnerText.Replace(System.Environment.NewLine, ""))
+                                                            : tr.InnerText.Replace(Environment.NewLine, ""))
                                                             .Replace("'", "")
                                                             .Replace(";", "")
                                                             .Replace("\n", String.Empty)
@@ -137,7 +128,7 @@ namespace ProviderResourcesParser.Controllers
                                         }
                                         else
                                         {
-                                            jsonFile += "\"" + tr.InnerText.Replace(System.Environment.NewLine, "")
+                                            jsonFile += "\"" + tr.InnerText.Replace(Environment.NewLine, "")
                                                 .Replace("'", "")
                                                 .Replace(";", "")
                                                 .Replace("\n", String.Empty)
@@ -145,13 +136,12 @@ namespace ProviderResourcesParser.Controllers
                                                 .Replace("\t", String.Empty)
                                                 .Replace("\"", "") + "\",";
                                         }
-
                                         cont++;
                                     }
                                 }
                                 else
                                 {
-                                    if (itemPage.QuerySelectorAll("#current_tab p") == null || !itemPage.QuerySelectorAll("#current_tab p").Any())
+                                    if (itemPage.QuerySelectorAll("#current_tab p").Any())
                                     {
                                         foreach (var pSelector in itemPage.QuerySelectorAll("#current_tab p"))
                                         {
@@ -159,7 +149,6 @@ namespace ProviderResourcesParser.Controllers
                                             {
                                                 if (pSelector.Attributes["class"].Value.Contains("view_label_type_"))
                                                 {
-
                                                     var itemID = pSelector.Id.Replace("view_label_", "view_");
 
                                                     if (!jsonFile.Contains(pSelector.InnerHtml))
@@ -171,13 +160,12 @@ namespace ProviderResourcesParser.Controllers
                                                                         ? "Related Resources"
                                                                         : pSelector.InnerHtml) + "\": " + "\"";
 
-
                                                         if (!pSelector.InnerHtml.Contains("Related Resource") &&
                                                             !pSelector.InnerHtml.Contains("Services"))
                                                         {
                                                             jsonFile += !String.IsNullOrEmpty(value.InnerHtml)
                                                                 ? value.InnerHtml.Replace("<br>", "")
-                                                                    .Replace(System.Environment.NewLine, "")
+                                                                    .Replace(Environment.NewLine, "")
                                                                     .Replace("'", "")
                                                                     .Replace(";", "")
                                                                     .Replace("\n", String.Empty)
@@ -244,8 +232,6 @@ namespace ProviderResourcesParser.Controllers
                                                                                 " | ";
                                                                         }
                                                                     }
-
-
                                                                 }
                                                                 if (jsonFile.EndsWith("|"))
                                                                 {
@@ -253,7 +239,6 @@ namespace ProviderResourcesParser.Controllers
                                                                 }
                                                             }
                                                         }
-
                                                         jsonFile += "\",";
                                                     }
                                                 }
@@ -261,8 +246,6 @@ namespace ProviderResourcesParser.Controllers
                                         }
                                     }
                                 }
-
-
                             }
                         }
                         jsonFile = jsonFile.Remove(jsonFile.Length - 1);
@@ -272,22 +255,18 @@ namespace ProviderResourcesParser.Controllers
 
                     pageNumber++;
                 }
-
-                //mainJsonFile = mainJsonFile.Remove(mainJsonFile.Length - 1);
+                //loading json file once it is full
                 mainJsonFile[mainJsonFile.Count - 1] = mainJsonFile[mainJsonFile.Count - 1].Remove(mainJsonFile[mainJsonFile.Count - 1].Length - 1);
                 mainJsonFile.Add("]}}");
 
+                //returning json file to view to be parse to csv
                 string json = string.Join("", mainJsonFile.ToArray());
-
                 return View("Index", (object)json);
             }
-            catch (Exception)
+            catch (Exception e)
             {
-
-                throw;
+                throw e;
             }
-
         }
-
     }
 }

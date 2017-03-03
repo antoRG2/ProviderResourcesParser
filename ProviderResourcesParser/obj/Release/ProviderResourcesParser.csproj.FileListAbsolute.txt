@@ -303,6 +303,6 @@ C:\Sources\ProviderResourcesParser\ProviderResourcesParser\bin\Microsoft.Owin.Se
 C:\Sources\ProviderResourcesParser\ProviderResourcesParser\bin\Microsoft.Owin.Security.Google.xml
 C:\Sources\ProviderResourcesParser\ProviderResourcesParser\bin\Microsoft.Owin.Security.Twitter.xml
 C:\Sources\ProviderResourcesParser\ProviderResourcesParser\bin\Microsoft.Owin.Security.MicrosoftAccount.xml
-C:\Sources\ProviderResourcesParser\ProviderResourcesParser\obj\Release\ProviderResourcesParser.csprojResolveAssemblyReference.cache
 C:\Sources\ProviderResourcesParser\ProviderResourcesParser\obj\Release\ProviderResourcesParser.dll
 C:\Sources\ProviderResourcesParser\ProviderResourcesParser\obj\Release\ProviderResourcesParser.pdb
+C:\Sources\ProviderResourcesParser\ProviderResourcesParser\obj\Release\ProviderResourcesParser.csprojResolveAssemblyReference.cache
