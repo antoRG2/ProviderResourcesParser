@@ -83,27 +83,27 @@ namespace ProviderResourcesParser.Controllers
                                     jsonFile += "\"Name\":" + "\"" +
                                                 (itemPage.QuerySelector("#view_field_name_top") != null
                                                     ? itemPage.QuerySelector("#view_field_name_top")
-                                                        .InnerText.Replace("'", "")
+                                                        .InnerText.Replace("'", "").Replace(@"\", " ")
                                                     : "") + "\",";
 
                                     jsonFile += "\"Address\":" + "\"" +
                                                 (itemPage.QuerySelector("#view_field_primaryAddressId") != null
                                                     ? itemPage.QuerySelector("#view_field_primaryAddressId")
                                                         .InnerHtml.Replace("<br>", "\u0020")
-                                                        .Replace("'", "")
+                                                        .Replace("'", "").Replace(@"\", " ")
                                                     : "") + "\",";
 
                                     jsonFile += "\"Telephone\":" + "\"" +
                                                 (itemPage.QuerySelector("#view_field_primaryTelephone") != null
                                                     ? itemPage.QuerySelector("#view_field_primaryTelephone")
-                                                        .InnerText.Replace("'", "")
+                                                        .InnerText.Replace("'", "").Replace(@"\", " ")
                                                     : "") + "\",";
 
                                     jsonFile += "\"Url\":" + "\"" + (itemPage.QuerySelector("#view_field_url a") != null
                                         ? itemPage.QuerySelector("#view_field_url a")
                                             .Attributes.Where(x => x.Name == "href")
                                             .FirstOrDefault()
-                                            .Value.Replace("'", "")
+                                            .Value.Replace("'", "").Replace(@"\", " ")
                                         : "") + "\",";
                                 }
 
@@ -124,6 +124,7 @@ namespace ProviderResourcesParser.Controllers
                                                             .Replace("\n", String.Empty)
                                                             .Replace("\r", String.Empty)
                                                             .Replace("\t", String.Empty)
+                                                            .Replace(@"\", " ")
                                                             .Replace("\"", "") + "\":";
                                         }
                                         else
@@ -134,6 +135,7 @@ namespace ProviderResourcesParser.Controllers
                                                 .Replace("\n", String.Empty)
                                                 .Replace("\r", String.Empty)
                                                 .Replace("\t", String.Empty)
+                                                .Replace(@"\", " ")
                                                 .Replace("\"", "") + "\",";
                                         }
                                         cont++;
@@ -163,7 +165,7 @@ namespace ProviderResourcesParser.Controllers
                                                         if (!pSelector.InnerHtml.Contains("Related Resource") &&
                                                             !pSelector.InnerHtml.Contains("Services"))
                                                         {
-                                                            jsonFile += !String.IsNullOrEmpty(value.InnerHtml)
+                                                            jsonFile += (value != null && !String.IsNullOrEmpty(value.InnerHtml))
                                                                 ? value.InnerHtml.Replace("<br>", "")
                                                                     .Replace(Environment.NewLine, "")
                                                                     .Replace("'", "")
@@ -171,6 +173,7 @@ namespace ProviderResourcesParser.Controllers
                                                                     .Replace("\n", String.Empty)
                                                                     .Replace("\r", String.Empty)
                                                                     .Replace("\t", String.Empty)
+                                                                    .Replace(@"\", " ")
                                                                     .Replace("\"", "")
                                                                 : "";
                                                         }
@@ -187,7 +190,7 @@ namespace ProviderResourcesParser.Controllers
                                                                     {
                                                                         jsonFile +=
                                                                             resource.InnerHtml.Replace("\"", "")
-                                                                                .Replace("'", "") +
+                                                                                .Replace("'", "").Replace(@"\", " ") +
                                                                             " | ";
                                                                     }
                                                                 }
@@ -228,7 +231,7 @@ namespace ProviderResourcesParser.Controllers
                                                                         {
                                                                             jsonFile +=
                                                                                 resource.InnerHtml.Replace("\"", "")
-                                                                                    .Replace("'", "") +
+                                                                                    .Replace("'", "").Replace(@"\", " ") +
                                                                                 " | ";
                                                                         }
                                                                     }
@@ -250,6 +253,8 @@ namespace ProviderResourcesParser.Controllers
                         }
                         jsonFile = jsonFile.Remove(jsonFile.Length - 1);
                         jsonFile += "},";
+
+                        jsonFile = jsonFile.Replace(@"\", " ");
                         mainJsonFile.Add(jsonFile);
                     });
 
@@ -258,6 +263,7 @@ namespace ProviderResourcesParser.Controllers
                 //loading json file once it is full
                 mainJsonFile[mainJsonFile.Count - 1] = mainJsonFile[mainJsonFile.Count - 1].Remove(mainJsonFile[mainJsonFile.Count - 1].Length - 1);
                 mainJsonFile.Add("]}}");
+
 
                 //returning json file to view to be parse to csv
                 string json = string.Join("", mainJsonFile.ToArray());
