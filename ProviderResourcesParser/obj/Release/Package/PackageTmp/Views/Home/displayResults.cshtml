@@ -1,0 +1,220 @@
+﻿@model List<ProviderResourcesParser.Models.ResourceModel>
+
+<link href="@Url.Content("~/Content/Site.css")" rel="stylesheet" type="text/css" />
+
+<div class="panel">
+    @foreach (var resource in Model)
+    {
+        <div class="resource-element">
+            <section class="resource-info">
+                <h3>@resource.resourceName</h3>
+                <pre>@resource.address</pre>
+                <p>@resource.phone</p>
+                <p>@resource.url</p>
+            </section>
+
+            <section class="overview">
+                <h4>Overview</h4>
+                @if (resource.overview.description != "")
+                {
+                    <div>
+                        <label>Description:</label>
+                        <p>@resource.overview.description</p>
+                    </div>
+                }
+                @if (resource.overview.primaryServices.Count != 0)
+                {
+                    <label>Primary Services:</label>
+                    <ul>
+                        @foreach (var ps in resource.overview.primaryServices)
+                        {
+                            <li>@ps</li>
+                        }
+                    </ul>
+                }
+                <h5><strong>General Information</strong></h5>
+                @if (resource.overview.generalInformation.hours != "")
+                {
+                    <div>
+                        <label>Hours:</label>
+                        <p>@resource.overview.generalInformation.hours</p>
+                    </div>
+                }
+                @if (resource.overview.generalInformation.intakeProcess != "")
+                {
+                    <div>
+                        <label>Intake Process:</label>
+                        <p>@resource.overview.generalInformation.intakeProcess</p>
+                    </div>
+                }
+                @if (resource.overview.generalInformation.programFees != "")
+                {
+                    <div>
+                        <label>Program Fees:</label>
+                        <p>@resource.overview.generalInformation.programFees</p>
+                    </div>
+                }
+                @if (resource.overview.generalInformation.programFees != "")
+                {
+                    <div>
+                        <label>Eligibility:</label>
+                        <p>@resource.overview.generalInformation.eligibility</p>
+                    </div>
+                }
+                @if (resource.overview.generalInformation.handicapAccessible != "")
+                {
+                    <div>
+                        <label>Handicap Accessible?</label>
+                        <p>@resource.overview.generalInformation.handicapAccessible</p>
+                    </div>
+                }
+                @if (resource.overview.generalInformation.handicapAccessible != "")
+                {
+                    <div>
+                        <label>Is Shelter?</label>
+                        <p>@resource.overview.generalInformation.isShelter</p>
+                    </div>
+                }
+                @if (resource.overview.generalInformation.relatedResources.Count != 0)
+                {
+                    <label>Related Resources</label>
+                    <ul>
+                        @foreach (var rr in resource.overview.generalInformation.relatedResources)
+                        {
+                            <li>@rr</li>
+                        }
+                    </ul>
+                }
+            </section>
+
+            <section class="details">
+                <h4>Details</h4>
+                <h5><strong>Miscellaneous</strong></h5>
+                @if (resource.details.miscellaneous.aka != "")
+                {
+                    <div>
+                        <label>AKA:</label>
+                        <p>@resource.details.miscellaneous.aka</p>
+                    </div>
+                }
+                @if (resource.details.miscellaneous.dateOfOfficialChange != "")
+                {
+                    <div>
+                        <label>Date of Official Change:</label>
+                        <p>@resource.details.miscellaneous.dateOfOfficialChange</p>
+                    </div>
+                }
+                @if (resource.details.miscellaneous.volunteerOpportunities != "")
+                {
+                    <div>
+                        <label>Volunteer Opportunities:</label>
+                        <p>@resource.details.miscellaneous.volunteerOpportunities</p>
+                    </div>
+                }
+                @if (resource.details.miscellaneous.Wishlist != "")
+                {
+                    <div>
+                        <label>Wishlist:</label>
+                        <p>@resource.details.miscellaneous.Wishlist</p>
+                    </div>
+                }
+                @if (resource.details.miscellaneous.relatedResource != "")
+                {
+                    <div>
+                        <label>Related Resource:</label>
+                        <p>@resource.details.miscellaneous.relatedResource</p>
+                    </div>
+                }
+                <h5><strong>Legal Status</strong></h5>
+                @if (resource.details.legalStatus.yearIncorporated != "")
+                {
+                    <div>
+                        <label>year Incorporated:</label>
+                        <p>@resource.details.legalStatus.yearIncorporated</p>
+                    </div>
+                }
+                @if (resource.details.legalStatus.primaryServices.Count != 0)
+                {
+                    <label>Primary Services:</label>
+                    <ul>
+                        @foreach (var ps in resource.details.legalStatus.primaryServices)
+                        {
+                            <li>@ps</li>
+                        }
+                    </ul>
+                }
+                @if (resource.details.legalStatus.secondaryServices.Count != 0)
+                {
+                    <label>Date of Official Change:</label>
+                    <ul>
+                        @foreach (var ss in resource.details.legalStatus.secondaryServices)
+                        {
+                            <li>@ss</li>
+                        }
+                    </ul>
+                }
+                @if (resource.details.legalStatus.relatedResources.Count != 0)
+                {
+                    <label>Related Resources:</label>
+                    <ul>
+                        @foreach (var rrs in resource.details.legalStatus.relatedResources)
+                        {
+                            <li>@rrs</li>
+                        }
+                    </ul>
+                }
+            </section>
+
+            <section class="contacts">
+                <h4>Contacts</h4>
+                @if (resource.contacts.addressListings.Count != 0)
+                {
+                    <label>Address Listings</label>
+                    <table class="address-list-table">
+                        <tbody>
+                            @foreach (var al in resource.contacts.addressListings)
+                            {
+                                <tr>
+                                    <td>@al.Item1</td>
+                                    <td>@al.Item2</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+                @if (resource.contacts.contacts.Count != 0)
+                {
+                    <label>Contacts</label>
+                    <table class="contacts-table">
+                        <tbody>
+                            @foreach (var con in resource.contacts.contacts)
+                            {
+                                <tr>
+                                    <td>@con.Item1</td>
+                                    <td>@con.Item2</td>
+                                </tr>
+                            }
+
+                        </tbody>
+                    </table>
+                }
+                @if (resource.contacts.phoneNumbers.Count != 0)
+                {
+                    <label>Phone Numbers</label>
+                    <table class="phone-numbers-table">
+                        <tbody>
+                            @foreach (var pn in resource.contacts.phoneNumbers)
+                            {
+                                <tr>
+                                    <td>@pn.Item1</td>
+                                    <td>@pn.Item2</td>
+                                </tr>
+                            }
+
+                        </tbody>
+                    </table>
+                }
+            </section>
+        </div>
+    }
+</div>
