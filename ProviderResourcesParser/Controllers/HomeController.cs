@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -35,7 +35,7 @@ namespace ProviderResourcesParser.Controllers
 
                 //get last page of the list 
                 var paginationList = page.QuerySelectorAll(".pagination a").ToList();
-                int lastPage = Int32.Parse(paginationList[paginationList.Count - 2].InnerText);
+                int lastPage = 2;//Int32.Parse(paginationList[paginationList.Count - 2].InnerText);
 
                 while (pageNumber <= lastPage)
                 {
@@ -93,7 +93,25 @@ namespace ProviderResourcesParser.Controllers
                             {
                                 if (primaryService.QuerySelector("a") != null)
                                 {
-                                    resource.overview.primaryServices.Add(primaryService.QuerySelector("a").InnerText);
+                                    String result = "";
+                                    int pFrom, pTo = 0;
+                                    if (primaryService.InnerHtml != "")
+                                    {
+                                        if (primaryService.InnerHtml.Contains("[") &&
+                                            primaryService.OuterHtml.IndexOf("code=") > -1)
+                                        {
+                                            pFrom =
+                                               primaryService.OuterHtml.IndexOf("code=") +
+                                               "code= ".Length;
+                                            pTo = primaryService.OuterHtml.IndexOf("\" style=");
+                                            if (pFrom > 0 && pTo > 0)
+                                            {
+                                                result = " (" + primaryService.OuterHtml.Substring(pFrom,
+                                                        pTo - pFrom) + ") ";
+                                            }
+                                        }
+                                    }
+                                    resource.overview.primaryServices.Add(primaryService.QuerySelector("a").InnerText + result);
                                 }
                             }
 
@@ -480,7 +498,7 @@ namespace ProviderResourcesParser.Controllers
                     {
                         lineBody += empty;
                     }
-                    
+
                     sb.AppendLine(lineBody);
                     lineBody = "";
                 }
