@@ -1,4 +1,4 @@
-﻿@model string
+﻿@model FileContentResult
 @{
     ViewBag.Title = "Provider Resources Parser";
 }
@@ -11,49 +11,5 @@
 }
 else
 {
-    <script>
-        $(document).ready(function () {
-            var s = '@Html.Raw(Model)';
-            var keys = {};
-            JSON.stringify(JSON.parse(s), function (key, value) { if (_.isArray(value)) keys[key] = 1; return value; });
-            s = JSON.stringify(JSON.parse(s), function (key, value) { if (!_.isArray(value) && key in keys) return [value]; return value; })
-
-            var inArray = [];
-            inArray = arrayFrom(JSON.parse(s));
-            var outArray = [];
-
-            for (var row in inArray) {
-                outArray[outArray.length] = parse_object(inArray[row]);
-            }
-
-            var options = {};
-            var dataString;
-            options.separator = ",";
-            options.headers = true;
-            options.noBreaks = false;
-
-            var csv = $.csv.fromObjects(outArray, options);
-
-
-            var downloaded = document.createElement('a');
-            downloaded.href = 'data:text/csv;charset=utf-8,' + encodeURI(csv);
-            downloaded.target = '_blank';
-            downloaded.download = 'Provider Resources.csv';
-
-            var currentdate = new Date();
-            var datetime = "Last Sync: " + currentdate.getDate() + "/"
-                            + (currentdate.getMonth() + 1) + "/"
-                            + currentdate.getFullYear() + " | "
-                            + currentdate.getHours() + ":"
-                            + currentdate.getMinutes() + ":"
-                            + currentdate.getSeconds();
-
-            console.log(datetime);
-
-            document.body.appendChild(downloaded);
-            downloaded.click();
-        });
-
-    </script>
     <h1>Parsing Complete</h1>
 }

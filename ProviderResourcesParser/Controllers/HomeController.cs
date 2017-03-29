@@ -1,10 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
+using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Web.Mvc;
+using CsvHelper;
 using Fizzler.Systems.HtmlAgilityPack;
 using HtmlAgilityPack;
+using Newtonsoft.Json;
 
 namespace ProviderResourcesParser.Controllers
 {
@@ -20,7 +28,6 @@ namespace ProviderResourcesParser.Controllers
             int pageNumber = 1;
             string pageUrl = "http://tn211.mycommunitypt.com/index.php/component/cpx/?task=search.query&code";
             List<string> mainJsonFile = new List<string>();
-            mainJsonFile.Add("{\"menu\": {\"menuitem\": [");
 
             try
             {
@@ -45,9 +52,14 @@ namespace ProviderResourcesParser.Controllers
                     }
 
                     //check all the element in the providers list
+                    //foreach (var item in page.QuerySelectorAll(".results li .content a"))
+                    //{
+
+
+
                     Parallel.ForEach(page.QuerySelectorAll(".results li .content a"), item =>
                     {
-                        string jsonFile = "{";
+                        string jsonFile = "[{";
 
                         for (int tabCounter = 1; tabCounter <= 3; tabCounter++)
                         {
@@ -60,6 +72,7 @@ namespace ProviderResourcesParser.Controllers
                                 string url = "http://tn211.mycommunitypt.com" + href;
                                 var itemDocument = itemWeb.Load(url);
                                 var itemPage = itemDocument.DocumentNode;
+                                var completeAddress = "";
 
                                 if (tabCounter >= 2)
                                 {
@@ -80,66 +93,116 @@ namespace ProviderResourcesParser.Controllers
                                 }
                                 else
                                 {
+                                    jsonFile += "\"Page Number\":" + "\"" + pageNumber + "\",";
+
                                     jsonFile += "\"Name\":" + "\"" +
-                                                (itemPage.QuerySelector("#view_field_name_top") != null
-                                                    ? itemPage.QuerySelector("#view_field_name_top")
-                                                        .InnerText.Replace("'", "").Replace(@"\", " ")
-                                                    : "") + "\",";
+                                                        (itemPage.QuerySelector("#view_field_name_top") != null
+                                                            ? itemPage.QuerySelector("#view_field_name_top")
+                                                                .InnerText.Replace("'", "")
+                                                                    .Replace(";", "")
+                                                                    .Replace("\n", String.Empty)
+                                                                    .Replace("\r", String.Empty)
+                                                                    .Replace("\t", String.Empty)
+                                                                    .Replace(@"\", " ")
+                                                                    .Replace("\"", "")
+                                                            : "") + "\",";
 
-                                    jsonFile += "\"Address\":" + "\"" +
-                                                (itemPage.QuerySelector("#view_field_primaryAddressId") != null
-                                                    ? itemPage.QuerySelector("#view_field_primaryAddressId")
-                                                        .InnerHtml.Replace("<br>", "\u0020")
-                                                        .Replace("'", "").Replace(@"\", " ")
-                                                    : "") + "\",";
-
-                                    jsonFile += "\"Telephone\":" + "\"" +
-                                                (itemPage.QuerySelector("#view_field_primaryTelephone") != null
-                                                    ? itemPage.QuerySelector("#view_field_primaryTelephone")
-                                                        .InnerText.Replace("'", "").Replace(@"\", " ")
-                                                    : "") + "\",";
-
-                                    jsonFile += "\"Url\":" + "\"" + (itemPage.QuerySelector("#view_field_url a") != null
-                                        ? itemPage.QuerySelector("#view_field_url a")
-                                            .Attributes.Where(x => x.Name == "href")
-                                            .FirstOrDefault()
-                                            .Value.Replace("'", "").Replace(@"\", " ")
-                                        : "") + "\",";
-                                }
-
-                                if (tabCounter == 3)
-                                {
-                                    var cont = 1;
-                                    foreach (var tr in itemPage.QuerySelectorAll("#current_tab tr td"))
-                                    {
-                                        if (cont % 2 != 0)
-                                        {
-                                            jsonFile += "\"" +
-                                                        (jsonFile.Contains(tr.InnerText)
-                                                            ? tr.InnerText.Replace(Environment.NewLine, "") +
-                                                              cont.ToString()
-                                                            : tr.InnerText.Replace(Environment.NewLine, ""))
-                                                            .Replace("'", "")
-                                                            .Replace(";", "")
-                                                            .Replace("\n", String.Empty)
-                                                            .Replace("\r", String.Empty)
-                                                            .Replace("\t", String.Empty)
-                                                            .Replace(@"\", " ")
-                                                            .Replace("\"", "") + "\":";
-                                        }
-                                        else
-                                        {
-                                            jsonFile += "\"" + tr.InnerText.Replace(Environment.NewLine, "")
+                                    completeAddress = (itemPage.QuerySelector("#view_field_primaryAddressId") != null
+                                            ? itemPage.QuerySelector("#view_field_primaryAddressId")
+                                                .InnerHtml.Replace("<br>", "\u0020")
                                                 .Replace("'", "")
                                                 .Replace(";", "")
                                                 .Replace("\n", String.Empty)
                                                 .Replace("\r", String.Empty)
                                                 .Replace("\t", String.Empty)
                                                 .Replace(@"\", " ")
-                                                .Replace("\"", "") + "\",";
+                                                .Replace("\"", "")
+                                            : "");
+
+
+                                    if (completeAddress != "")
+                                    {
+                                        //Check if address has more than one ',' and replace that with an empty space to just let one comma
+                                        if (completeAddress.Count(x => x == ',') > 1)
+                                        {
+                                            var regex = new Regex(Regex.Escape(","));
+                                            completeAddress = regex.Replace(completeAddress, "", completeAddress.Count(x => x == ',') - 1);
                                         }
+
+                                        if (completeAddress.Count(x => x == ',') >= 1)
+                                        {
+                                            jsonFile += "\"Address\":" + "\"" +
+                                                        completeAddress.Split(',')[0] + "\",";
+
+                                            jsonFile += "\"State\":" + "\"" +
+                                                        completeAddress.Split(',')[1].Trim().Split(' ')[0] + "\",";
+
+                                            jsonFile += "\"Zip\":" + "\"" +
+                                                        completeAddress.Split(',')[1].Trim().Split(' ')[2] + "\",";
+                                        }
+                                        else
+                                        {
+                                            jsonFile += "\"Address\":" + "\"" +
+                                                          completeAddress + "\",";
+                                        }
+
+                                    }
+
+
+                                    jsonFile += "\"Telephone\":" + "\"" +
+                                                        (itemPage.QuerySelector("#view_field_primaryTelephone") != null
+                                                            ? itemPage.QuerySelector("#view_field_primaryTelephone")
+                                                                .InnerText.Replace("'", "")
+                                                                    .Replace(";", "")
+                                                                    .Replace("\n", String.Empty)
+                                                                    .Replace("\r", String.Empty)
+                                                                    .Replace("\t", String.Empty)
+                                                                    .Replace(@"\", " ")
+                                                                    .Replace("\"", "")
+                                                            : "") + "\",";
+
+                                    jsonFile += "\"Url\":" + "\"" + (itemPage.QuerySelector("#view_field_url a") != null
+                                                ? itemPage.QuerySelector("#view_field_url a")
+                                                    .Attributes.Where(x => x.Name == "href")
+                                                    .FirstOrDefault()
+                                                    .Value.Replace("'", "")
+                                                                    .Replace(";", "")
+                                                                    .Replace("\n", String.Empty)
+                                                                    .Replace("\r", String.Empty)
+                                                                    .Replace("\t", String.Empty)
+                                                                    .Replace(@"\", " ")
+                                                                    .Replace("\"", "")
+                                                : "") + "\",";
+                                }
+
+                                if (tabCounter == 3)
+                                {
+                                    var cont = 0;
+                                    var labels = itemPage.QuerySelectorAll("#current_tab .view_type_label");
+
+                                    foreach (var table in itemPage.QuerySelectorAll("#current_tab table"))
+                                    {
+                                        jsonFile += "\"" + labels.ElementAt(cont).InnerHtml + "\":" + "\"";
+
+                                        foreach (var tr in table.QuerySelectorAll("tr td"))
+                                        {
+                                            if (!tr.Attributes[0].Value.Contains("width: 125px; padding-bottom: 10px; vertical-align: top; font-weight: bold;"))
+                                            {
+                                                jsonFile += tr.InnerText.Replace(Environment.NewLine, "")
+                                                           .Replace("'", "")
+                                                           .Replace(";", "")
+                                                           .Replace("\n", String.Empty)
+                                                           .Replace("\r", String.Empty)
+                                                           .Replace("\t", String.Empty)
+                                                           .Replace(@"\", " ")
+                                                           .Replace("\"", "") + "| ";
+                                            }
+                                        }
+                                        jsonFile += "\",";
                                         cont++;
                                     }
+
+
                                 }
                                 else
                                 {
@@ -158,40 +221,40 @@ namespace ProviderResourcesParser.Controllers
                                                         var value = itemPage.QuerySelector("#current_tab p#" + itemID);
 
                                                         jsonFile += "\"" +
-                                                                    (pSelector.InnerHtml.Contains("Related Resource")
-                                                                        ? "Related Resources"
-                                                                        : pSelector.InnerHtml) + "\": " + "\"";
+                                                                            (pSelector.InnerHtml.Contains("Related Resource")
+                                                                                ? "Related Resources"
+                                                                                : pSelector.InnerHtml) + "\": " + "\"";
 
                                                         if (!pSelector.InnerHtml.Contains("Related Resource") &&
-                                                            !pSelector.InnerHtml.Contains("Services"))
+                                                                    !pSelector.InnerHtml.Contains("Services"))
                                                         {
                                                             jsonFile += (value != null && !String.IsNullOrEmpty(value.InnerHtml))
-                                                                ? value.InnerHtml.Replace("<br>", "")
-                                                                    .Replace(Environment.NewLine, "")
-                                                                    .Replace("'", "")
-                                                                    .Replace(";", "")
-                                                                    .Replace("\n", String.Empty)
-                                                                    .Replace("\r", String.Empty)
-                                                                    .Replace("\t", String.Empty)
-                                                                    .Replace(@"\", " ")
-                                                                    .Replace("\"", "")
-                                                                : "";
+                                                                        ? value.InnerHtml.Replace("<br>", "")
+                                                                            .Replace(Environment.NewLine, "")
+                                                                            .Replace("'", "")
+                                                                            .Replace(";", "")
+                                                                            .Replace("\n", String.Empty)
+                                                                            .Replace("\r", String.Empty)
+                                                                            .Replace("\t", String.Empty)
+                                                                            .Replace(@"\", " ")
+                                                                            .Replace("\"", "")
+                                                                        : "";
                                                         }
                                                         else
                                                         {
                                                             if (pSelector.InnerHtml.Contains("Related Resource"))
                                                             {
                                                                 foreach (
-                                                                    var resource in
-                                                                        itemPage.QuerySelectorAll(
-                                                                            ".view_type_resource_list a"))
+                                                                            var resource in
+                                                                                itemPage.QuerySelectorAll(
+                                                                                    ".view_type_resource_list a"))
                                                                 {
                                                                     if (resource.InnerHtml != "")
                                                                     {
                                                                         jsonFile +=
-                                                                            resource.InnerHtml.Replace("\"", "")
-                                                                                .Replace("'", "").Replace(@"\", " ") +
-                                                                            " | ";
+                                                                                    resource.InnerHtml.Replace("\"", "")
+                                                                                        .Replace("'", "").Replace(@"\", " ") +
+                                                                                    " | ";
                                                                     }
                                                                 }
                                                                 if (jsonFile.EndsWith("|"))
@@ -203,36 +266,36 @@ namespace ProviderResourcesParser.Controllers
                                                             if (pSelector.InnerHtml.Contains("Services"))
                                                             {
                                                                 string id = pSelector.InnerHtml.Split(' ')[0].ToLower() +
-                                                                            pSelector.InnerHtml.Split(' ')[1];
+                                                                                    pSelector.InnerHtml.Split(' ')[1];
                                                                 id = id.Remove(id.Length - 1);
 
                                                                 foreach (
-                                                                    var resource in
-                                                                        itemPage.QuerySelectorAll("#view_field_" + id + " a")
-                                                                    )
+                                                                            var resource in
+                                                                                itemPage.QuerySelectorAll("#view_field_" + id + " a")
+                                                                            )
                                                                 {
                                                                     if (resource.InnerHtml != "" &&
-                                                                        !resource.InnerHtml.Contains("Edit "))
+                                                                                !resource.InnerHtml.Contains("Edit "))
                                                                     {
                                                                         if (resource.InnerHtml.Contains("[") &&
-                                                                            resource.OuterHtml.IndexOf("code=") > -1)
+                                                                                    resource.OuterHtml.IndexOf("code=") > -1)
                                                                         {
                                                                             int pFrom =
-                                                                                resource.OuterHtml.IndexOf("code=") +
-                                                                                "code= ".Length;
+                                                                                        resource.OuterHtml.IndexOf("code=") +
+                                                                                        "code= ".Length;
                                                                             int pTo = resource.OuterHtml.LastIndexOf("\" ");
                                                                             String result =
-                                                                                resource.OuterHtml.Substring(pFrom,
-                                                                                    pTo - pFrom);
+                                                                                        resource.OuterHtml.Substring(pFrom,
+                                                                                            pTo - pFrom);
                                                                             jsonFile = jsonFile.Insert(jsonFile.Length - 3,
-                                                                                "(" + result + ")");
+                                                                                        "(" + result + ")");
                                                                         }
                                                                         else
                                                                         {
                                                                             jsonFile +=
-                                                                                resource.InnerHtml.Replace("\"", "")
-                                                                                    .Replace("'", "").Replace(@"\", " ") +
-                                                                                " | ";
+                                                                                        resource.InnerHtml.Replace("\"", "")
+                                                                                            .Replace("'", "").Replace(@"\", " ") +
+                                                                                        " | ";
                                                                         }
                                                                     }
                                                                 }
@@ -252,27 +315,73 @@ namespace ProviderResourcesParser.Controllers
                             }
                         }
                         jsonFile = jsonFile.Remove(jsonFile.Length - 1);
-                        jsonFile += "},";
+                        jsonFile += "}]";
 
                         jsonFile = jsonFile.Replace(@"\", " ");
+
                         mainJsonFile.Add(jsonFile);
                     });
 
                     pageNumber++;
                 }
-                //loading json file once it is full
-                mainJsonFile[mainJsonFile.Count - 1] = mainJsonFile[mainJsonFile.Count - 1].Remove(mainJsonFile[mainJsonFile.Count - 1].Length - 1);
-                mainJsonFile.Add("]}}");
 
+                string csv = jsonToCSV(mainJsonFile, ",");
 
-                //returning json file to view to be parse to csv
-                string json = string.Join("", mainJsonFile.ToArray());
-                return View("Index", (object)json);
+                string path = @"c:\Provider\ProviderResourcesFile.csv";
+
+                System.IO.File.WriteAllText(path, csv);
+
+                return File(new System.Text.UTF8Encoding().GetBytes(csv),
+                    "text/csv", "Provider Resources File.csv");
+
             }
             catch (Exception e)
             {
                 throw e;
             }
+        }
+
+        public static DataTable jsonStringToTable(List<string> jsonContent)
+        {
+            DataTable mainTable = new DataTable();
+            foreach (var json in jsonContent)
+            {
+                DataTable dt = JsonConvert.DeserializeObject<DataTable>(json);
+                mainTable.Merge(dt);
+            }
+
+
+            return mainTable;
+        }
+
+        public static string jsonToCSV(List<string> jsonContent, string delimiter)
+        {
+            StringWriter csvString = new StringWriter();
+            using (var csv = new CsvWriter(csvString))
+            {
+                csv.Configuration.SkipEmptyRecords = true;
+                csv.Configuration.WillThrowOnMissingField = false;
+                csv.Configuration.Delimiter = delimiter;
+
+                using (var dt = jsonStringToTable(jsonContent))
+                {
+                    foreach (DataColumn column in dt.Columns)
+                    {
+                        csv.WriteField(column.ColumnName);
+                    }
+                    csv.NextRecord();
+
+                    foreach (DataRow row in dt.Rows)
+                    {
+                        for (var i = 0; i < dt.Columns.Count; i++)
+                        {
+                            csv.WriteField(row[i]);
+                        }
+                        csv.NextRecord();
+                    }
+                }
+            }
+            return csvString.ToString();
         }
     }
 }
