@@ -24,9 +24,6 @@ namespace ProviderResourcesParser
                 "~/Scripts/respond.js"));
 
             bundles.Add(new ScriptBundle("~/bundles/site").Include(
-                "~/Scripts/jQuery-csv.js",
-                "~/Scripts/underscore-min.js",
-                "~/Scripts/filesaver.js",
             "~/Scripts/site.js"));
 
             bundles.Add(new StyleBundle("~/Content/css").Include(
